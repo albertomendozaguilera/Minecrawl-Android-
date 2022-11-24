@@ -33,22 +33,24 @@ public class MenuActivity extends AppCompatActivity implements View.OnTouchListe
                 switch(motionEvent.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         // PRESSED
-                        return true; // if you want to handle the touch event
+                        return true;
                     case MotionEvent.ACTION_UP:
+                        //INTENT IS USED TO LAUNCH A NEW ACTIVITY, IN THIS CASE MAIN ACTIVITY
+                        //YOU CAN ADD INFO TO THE INTENT (intent.putExtra();) SO THAT THE ACTIVITY TOU OPEN CAN ACCESS THAT INFORMATION
                         Intent i = new Intent(this, MainActivity.class);
                         startActivity(i);
-                        return true; // if you want to handle the touch event
+                        return true;
                 }
                 break;
             case R.id.ibMultiplayer:
                 switch(motionEvent.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         // PRESSED
-                        return true; // if you want to handle the touch event
+                        return true;
                     case MotionEvent.ACTION_UP:
                         Intent i = new Intent(this, MainActivity.class);
                         startActivity(i);
-                        return true; // if you want to handle the touch event
+                        return true;
                 }
                 break;
         }
