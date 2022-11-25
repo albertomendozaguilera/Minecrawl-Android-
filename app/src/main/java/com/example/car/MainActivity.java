@@ -1,14 +1,12 @@
 package com.example.car;
 
-import static android.content.ContentValues.TAG;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -24,15 +22,18 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+public class MainActivity extends AppCompatActivity implements View.OnTouchListener{
 
     Car car;
     Maze m;
+    int partyId;
+    FirebaseDatabase database;
+    DatabaseReference myRef;
     TableLayout tlBoard;
     ImageButton btUp, btLeft, btRight, btMenu, btRespawn, btTitleScreen;
     ConstraintLayout clDeathScreen;
     LinearLayout game;
-    ImageView iv1, iv2, iv3, iv4, iv5, iv6, iv7, iv8, iv9, deathScreen;
+    ImageView iv1, iv2, iv3, iv4, iv5, iv6, iv7, iv8, iv9, ivSpider, deathScreen;
     ArrayList <ImageView> ivList;
     int dimensions = 20;
     final int VIEWRANGE = 3;
@@ -55,39 +56,45 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case 0:
                 m = new Maze(dimensions);
                 m.draw();
+                m.getGrid()[dimensions-1][dimensions-1] = '4';
                 initializeGame();
                 car = new Car(1);
-                addCar(car, ivList);
+                render();
                 break;
             case 1:
                 m = new Maze(dimensions);
                 m.draw();
-                //TODO UPLOAD MAZE TO FIREBASE
-                initializeGame();
                 car = new Car(1);
-                addCar(car, ivList);
+                //TODO UPLOAD MAZE TO FIREBASE
+                connectToFirebase();
+                initializeGame();
+                render();
                 break;
             case 2:
                 //TODO RETRIEVE MAZE FROM FIREBASE
                 initializeGame();
 
-                car = new Car(1);
-                addCar(car, ivList);
+                car = new Car(2);
+                render();
         }
     }
 
     //TODO GET A INSTANCE OF THE DATABASE ON FIREBASE
     public void connectToFirebase(){
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference myRef = database.getReference("games");
+        database = FirebaseDatabase.getInstance("https://online-car-8c397-default-rtdb.europe-west1.firebasedatabase.app");
+        myRef = database.getReference("games");
+        myRef.child("1");
+        System.out.println("yuuup     " + myRef.toString());
 
-        database.getReference().child("games")
-                .addListenerForSingleValueEvent(new ValueEventListener() {
+        myRef.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                            String game = snapshot.getKey();
-                            System.out.println(game);
+                            for (DataSnapshot snap : snapshot.getChildren()) {
+                                if (snap.getKey().toString() == "game" + car.getId()){
+
+                                }
+                            }
                         }
                     }
                     @Override
@@ -96,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
 
 
-        myRef.setValue("Hello, World!");
+
     }
 
 
@@ -126,56 +133,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         iv9 = findViewById(R.id.iv9);
         ivList.add(iv9);
 
+        ivSpider = findViewById(R.id.ivSpider);
+
         game = findViewById(R.id.llGame);
         deathScreen = findViewById(R.id.ivDeathScreen);
         clDeathScreen = findViewById(R.id.clDeathScreen);
         game.bringToFront();
 
         btUp = findViewById(R.id.ibMove);
-        btUp.setOnClickListener(this);
+        btUp.setOnTouchListener(this);
         btLeft = findViewById(R.id.ibLeft);
-        btLeft.setOnClickListener(this);
+        btLeft.setOnTouchListener(this);
         btRight = findViewById(R.id.ibRight);
-        btRight.setOnClickListener(this);
+        btRight.setOnTouchListener(this);
         btMenu = findViewById(R.id.ibMenu);
-        btMenu.setOnClickListener(this);
+        btMenu.setOnTouchListener(this);
         btRespawn = findViewById(R.id.ibRespawn);
-        btRespawn.setOnClickListener(this);
+        btRespawn.setOnTouchListener(this);
         btTitleScreen = findViewById(R.id.ibTitleScreen);
-        btTitleScreen.setOnClickListener(this);
+        btTitleScreen.setOnTouchListener(this);
 
     }
 
     //DRAW THE CAR AND ALL ELEMENTS NEAR TO IT
     public void addCar (Car car, ArrayList<ImageView> ivList) {
-        int imageId = 0;
-        for (int i = car.getX()-1; i < car.getX()-1 + VIEWRANGE; i++) {
-            for (int j = car.getY()-1; j < car.getY()-1 + VIEWRANGE; j++){
-                ImageView iv = ivList.get(imageId);
-                m.draw();
-                switch (m.getGrid()[i][j]) {
-                    case '0':
-                        iv.setBackground(getDrawable(R.drawable.sand));
-                        break;
-                    case '1':
-                        iv.setBackground(getDrawable(R.drawable.cactusinsand));
-                        break;
-                    case '2':
-                        iv.setBackground(getDrawable(R.drawable.lavainsand));
-                        break;
-                    case '3':
-                        iv.setBackground(getDrawable(R.drawable.magma));
-                        break;
-                }
-                imageId++;
-            }
-        }
-        ivList.get(4).setBackground(getDrawable(R.drawable.spiderinsand));
+        render();
     }
 
     //DRAW ELEMENTS NEAR TO CAR ACCORDING TO THE NUMBER IN EACH BOX OF THE MAP
     public void drawViews (int imageId, int i, int j) {
-        if (imageId != 4) {
             ImageView iv = ivList.get(imageId);
             switch (m.getGrid()[i][j]) {
                 case '0':
@@ -190,12 +176,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 case '3':
                     iv.setBackground(getDrawable(R.drawable.magma));
                     break;
-            }
+                case '4':
+                    //TODO WIN
+
         }
     }
 
     //CHECK IF THE CAR IS ON A BOUND AND IF IT IS, DRAW THE OPPOSITE SIDE OF THE BOARD (THE MAP IS LIKE A SPHERE)
-    public void checkOutOfBounds () {
+    public void render() {
         int posX = 0;
         int posY = 0;
         int imageId = 0;
@@ -262,13 +250,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void carLeft(Car c){
         if(c.getRotation()-1 < 0) {c.setRotation(4);}
         c.setRotation(c.getRotation() - 1);
-        ivList.get(4).setRotation(c.getDirection()[c.getRotation()]);
+        ivSpider.setRotation(c.getDirection()[c.getRotation()]);
     }
     //ROTATE CAR AND ITS VIEW TO RIGHT
     public void carRight(Car c){
         if(c.getRotation()+1 > 3) {c.setRotation(-1);}
         c.setRotation(c.getRotation() + 1);
-        ivList.get(4).setRotation(c.getDirection()[c.getRotation()]);
+        ivSpider.setRotation(c.getDirection()[c.getRotation()]);
     }
 
     //CHECK THE BOX WHERE THE CAR IS GOING TO MOVE.
@@ -281,7 +269,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case '0':
                 car.setX(x);
                 car.setY(y);
-                checkOutOfBounds();
+                render();
                 break;
             case '1':
                 car.loseHeart();
@@ -293,7 +281,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case '2':
                 car.setX(x);
                 car.setY(y);
-                checkOutOfBounds();
+                render();
                 setDeathScreenVisible();
                 setButtonsInvisible();
                 break;
@@ -301,7 +289,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 car.setX(x);
                 car.setY(y);
                 car.loseHeart();
-                checkOutOfBounds();
+                render();
                 if (car.getLife() <= 0) {
                     setDeathScreenVisible();
                     setButtonsInvisible();
@@ -332,31 +320,74 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     //LISTENER TO ALL BUTTONS(VIEW) IN THE SCREEN
+
+
     @Override
-    public void onClick(View view) {
+    public boolean onTouch(View view, MotionEvent motionEvent) {
         switch (view.getId()) {
             case R.id.ibMove:
-                carMove(car);
+                switch(motionEvent.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        btUp.setBackground(getDrawable(R.drawable.pressed_button));
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                        btUp.setBackground(getDrawable(R.drawable.not_pressed_button));
+                        carMove(car);
+                        return true;
+                }
                 break;
             case R.id.ibLeft:
-                carLeft(car);
+                switch(motionEvent.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        btLeft.setBackground(getDrawable(R.drawable.left_turn_button_pressed));
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                        btLeft.setBackground(getDrawable(R.drawable.left_turn_button));
+                        carLeft(car);
+                        return true;
+                }
                 break;
             case R.id.ibRight:
-                carRight(car);
+                switch(motionEvent.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        btRight.setBackground(getDrawable(R.drawable.right_turn_button_pressed));
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                        btRight.setBackground(getDrawable(R.drawable.right_turn_button));
+                        carRight(car);
+                        return true;
+                }
                 break;
             case R.id.ibMenu:
-                menu();
+            case R.id.ibTitleScreen:
+                switch(motionEvent.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        btMenu.setBackground(getDrawable(R.drawable.pressed_button));
+                        btTitleScreen.setBackground(getDrawable(R.drawable.pressed_button));
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                        btMenu.setBackground(getDrawable(R.drawable.not_pressed_button));
+                        btTitleScreen.setBackground(getDrawable(R.drawable.not_pressed_button));
+                        menu();
+                        return true;
+                }
                 break;
             case R.id.ibRespawn:
                 //RESTART GAME
                 //GENERATE A NEW MAIN ACTIVITY(GAME SCREEN), FINISH CURRENT AND START THE NEW ACTIVITY
-                Intent intent = getIntent();
-                finish();
-                startActivity(intent);
-                break;
-            case R.id.ibTitleScreen:
-                menu();
+                switch(motionEvent.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        btRespawn.setBackground(getDrawable(R.drawable.pressed_button));
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                        btRespawn.setBackground(getDrawable(R.drawable.not_pressed_button));
+                        Intent intent = getIntent();
+                        finish();
+                        startActivity(intent);
+                        return true;
+                }
                 break;
         }
+        return false;
     }
 }

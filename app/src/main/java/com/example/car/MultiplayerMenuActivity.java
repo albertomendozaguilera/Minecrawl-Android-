@@ -2,60 +2,57 @@ package com.example.car;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageButton;
 
-public class MenuActivity extends AppCompatActivity implements View.OnTouchListener{
+public class MultiplayerMenuActivity extends AppCompatActivity implements View.OnTouchListener{
 
-    ImageButton ibStart, ibMultiplayer;
+    ImageButton ibHost, ibJoin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_menu);
+        setContentView(R.layout.activity_multiplayer_menu);
 
-        //LINK EACH BUTTON TO A JAVA OBJECT
-        ibStart = findViewById(R.id.ibStart);
-        ibStart.setOnTouchListener(this);
-        ibMultiplayer = findViewById(R.id.ibMultiplayer);
-        ibMultiplayer.setOnTouchListener(this);
+        ibHost = findViewById(R.id.ibHost);
+        ibJoin = findViewById(R.id.ibJoin);
 
     }
 
-    //WITH ONTOUCH LISTENER WE CAN CHECK IF THE BUTTON IS PRESSED AND WHEN IT IS RELEASED
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
-        switch (view.getId()){
-            case R.id.ibStart:
+        Intent intent = new Intent(this, MainActivity.class);
+        switch (view.getId()) {
+            case R.id.ibHost:
                 switch(motionEvent.getAction()) {
                     case MotionEvent.ACTION_DOWN:
-                        ibStart.setBackground(getDrawable(R.drawable.pressed_button));
                         return true;
                     case MotionEvent.ACTION_UP:
                         //INTENT IS USED TO LAUNCH A NEW ACTIVITY, IN THIS CASE MAIN ACTIVITY
                         //YOU CAN ADD INFO TO THE INTENT (intent.putExtra();) SO THAT THE ACTIVITY TOU OPEN CAN ACCESS THAT INFORMATION
-                        ibStart.setBackground(getDrawable(R.drawable.not_pressed_button));
-                        Intent i = new Intent(this, MainActivity.class);
-                        startActivity(i);
+                        intent.putExtra("game", 1);
+                        startActivity(intent);
                         return true;
                 }
                 break;
-            case R.id.ibMultiplayer:
+            case R.id.ibJoin:
                 switch(motionEvent.getAction()) {
                     case MotionEvent.ACTION_DOWN:
-                        ibMultiplayer.setBackground(getDrawable(R.drawable.pressed_button));
                         return true;
                     case MotionEvent.ACTION_UP:
-                        ibMultiplayer.setBackground(getDrawable(R.drawable.not_pressed_button));
-                        Intent i = new Intent(this, MultiplayerMenuActivity.class);
-                        startActivity(i);
+                        //INTENT IS USED TO LAUNCH A NEW ACTIVITY, IN THIS CASE MAIN ACTIVITY
+                        //YOU CAN ADD INFO TO THE INTENT (intent.putExtra();) SO THAT THE ACTIVITY TOU OPEN CAN ACCESS THAT INFORMATION
+                        intent.putExtra("game", 2);
+                        startActivity(intent);
                         return true;
                 }
                 break;
         }
+
         return false;
     }
 }

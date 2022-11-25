@@ -10,7 +10,7 @@ public class Car {
 
     public Car(int id) {
         this.id = id;
-        this.life = 5;
+        this.life = 10;
         this.x = 1;
         this.y = 1;
         this.rotation = 3;
