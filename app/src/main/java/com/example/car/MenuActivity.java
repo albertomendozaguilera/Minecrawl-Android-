@@ -2,20 +2,30 @@ package com.example.car;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.animation.ObjectAnimator;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
+import android.webkit.WebView;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.VideoView;
 
 public class MenuActivity extends AppCompatActivity implements View.OnTouchListener{
 
-    ImageButton ibStart, ibMultiplayer;
+    ImageButton ibStart, ibMultiplayer, ibprueba;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_menu);
+
+        WebView v = findViewById(R.id.ibPueba);
+
+
+
 
         //LINK EACH BUTTON TO A JAVA OBJECT
         ibStart = findViewById(R.id.ibStart);

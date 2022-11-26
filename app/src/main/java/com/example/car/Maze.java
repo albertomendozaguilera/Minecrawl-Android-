@@ -3,6 +3,7 @@ package com.example.car;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Random;
 
 public class Maze {
@@ -309,6 +310,14 @@ public class Maze {
 
     public char[][] getGrid() {
         return grid;
+    }
+
+    public void setGrid (char[][] maze) {
+        for (int i = 0; i < dimensionX; i++) {
+            for (int j = 0; j < dimensionX; j++) {
+                this.grid[i][j] = maze[i][j];
+            }
+        }
     }
 
     // simply prints the map
