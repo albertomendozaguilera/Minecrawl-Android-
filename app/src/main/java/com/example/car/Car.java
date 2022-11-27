@@ -11,6 +11,7 @@ public class Car {
     private int y;
     private int rotation;
     private List<Integer> direction;
+    private int sprite;
 
     public Car(){}
 
@@ -29,6 +30,11 @@ public class Car {
                 add(0);
             }
         };
+        if (this.id == 1){
+            this.sprite = R.drawable.spider;
+        }else{
+            this.sprite = R.drawable.secondplayer;
+        }
     }
 
     public int getId() {
@@ -87,4 +93,15 @@ public class Car {
         this.life--;
     }
 
+    public void setDirection(List<Integer> direction) {
+        this.direction = direction;
+    }
+
+    public int getSprite() {
+        return sprite;
+    }
+
+    public void setSprite(int sprite) {
+        this.sprite = sprite;
+    }
 }

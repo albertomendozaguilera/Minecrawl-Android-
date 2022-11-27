@@ -6,6 +6,8 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.graphics.Color;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
@@ -15,6 +17,7 @@ import android.widget.LinearLayout;
 import android.widget.TableLayout;
 import android.widget.TextView;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -37,9 +40,11 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     ImageButton btUp, btLeft, btRight, btMenu, btRespawn, btTitleScreen;
     ConstraintLayout clDeathScreen;
     LinearLayout game;
-    ImageView iv1, iv2, iv3, iv4, iv5, iv6, iv7, iv8, iv9, ivSpider, deathScreen, ivHearts;
+    MediaPlayer spiderStep, steveStep;
+    ImageView iv1, iv2, iv3, iv4, iv5, iv6, iv7, iv8, iv9, ivSpider, deathScreen, ivHearts, imageView2;
     TextView tvScoreNumber, tvScoreNumber2;
     ArrayList <ImageView> ivList;
+    LottieAnimationView animationView;
     final int[] heartsId = {R.drawable.healthbar0, R.drawable.healthbar1, R.drawable.healthbar2, R.drawable.healthbar3, R.drawable.healthbar4, R.drawable.healthbar5, R.drawable.healthbar6, R.drawable.healthbar7, R.drawable.healthbar8, R.drawable.healthbar9, R.drawable.healthbar10};
     int dimensions = 10;
     final int VIEWRANGE = 3;
@@ -63,15 +68,14 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 m = new Maze(dimensions);
                 m.draw();
                 m.getGrid()[dimensions-1][dimensions-1] = '4';
-                initializeGame();
                 car = new Car(1);
+                initializeGame();
                 render();
                 ivHearts.bringToFront();
                 break;
             case 1:
                 m = new Maze(dimensions);
                 m.draw();
-                m.getGrid()[dimensions-1][dimensions-1] = '4';
                 car = new Car(1);
                 connectToFirebase();
                 initializeGame();
@@ -79,7 +83,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             case 2:
                 m = new Maze(dimensions);
                 m.draw();
-                m.getGrid()[dimensions-1][dimensions-1] = '4';
                 car = new Car(2);
                 car.setX(dimensions - 1);
                 car.setY(dimensions-1);
@@ -185,6 +188,10 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         ivList.add(iv9);
 
         ivSpider = findViewById(R.id.ivSpider);
+        ivSpider.setBackground(getDrawable(car.getSprite()));
+
+        imageView2 = findViewById(R.id.imageView2);
+
         ivHearts = findViewById(R.id.ivHearts);
 
         tvScoreNumber = findViewById(R.id.tvScoreNumber);
@@ -193,6 +200,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         game = findViewById(R.id.llGame);
         deathScreen = findViewById(R.id.ivDeathScreen);
         clDeathScreen = findViewById(R.id.clDeathScreen);
+        animationView = findViewById(R.id.animationView);
         game.bringToFront();
 
         btUp = findViewById(R.id.ibMove);
@@ -207,6 +215,9 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         btRespawn.setOnTouchListener(this);
         btTitleScreen = findViewById(R.id.ibTitleScreen);
         btTitleScreen.setOnTouchListener(this);
+
+        spiderStep = MediaPlayer.create(MainActivity.this, R.raw.step3);
+        steveStep = MediaPlayer.create(MainActivity.this, R.raw.footstep);
 
     }
 
@@ -225,17 +236,26 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 iv.setBackground(getDrawable(R.drawable.lavainsand));
                 break;
             case '3':
-                iv.setBackground(getDrawable(R.drawable.magma));
+                if(imageId != 4){
+                    iv.setBackground(getDrawable(R.drawable.sand));
+                }else{
+                    iv.setBackground(getDrawable(R.drawable.magma));
+                }
                 break;
             case '4':
                 iv.setBackground(getDrawable(R.drawable.goal));
         }
         if (database != null) {
             if (car2.getX() == i && car2.getY() == j){
-                iv.setBackground(getDrawable(R.drawable.spiderinsand));
+                if(car2.getId() == 1){
+                    iv.setBackground(getDrawable(R.drawable.spiderinsand));
+                }else{
+                    iv.setBackground(getDrawable(R.drawable.goal));
+                }
                 iv.setRotation(car2.getDirection().get(car2.getRotation()));
             }
         }
+
     }
 
     //CHECK IF THE CAR IS ON A BOUND AND IF IT IS, DRAW THE OPPOSITE SIDE OF THE BOARD (THE MAP IS LIKE A SPHERE)
@@ -324,30 +344,58 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     public void checkTile (Car car, int x, int y) {
         switch (m.getGrid()[x][y]){
             case '0':
+                if (car.getId() == 1){
+                    spiderStep.start();
+                }else{
+                    steveStep.start();
+                }
                 car.setX(x);
                 car.setY(y);
                 car.setMovements(car.getMovements()+1);
                 render();
                 break;
             case '1':
+                if(car.getId() == 1) {
+                    MediaPlayer music = MediaPlayer.create(MainActivity.this, R.raw.say2);
+                    music.start();
+                }else{
+                    MediaPlayer music = MediaPlayer.create(MainActivity.this, R.raw.hit2);
+                    music.start();
+                }
                 car.loseHeart();
                 ivHearts.setImageResource(heartsId[car.getLife()]);
                 if (car.getLife() <= 0) {
                     setDeathScreenVisible();
                     setButtonsInvisible();
+                    tvScoreNumber.setText(""+car.getMovements());
+                    tvScoreNumber2.setText(""+car.getMovements());
+                    animationView.setVisibility(View.INVISIBLE);
                 }
                 break;
             case '2':
+                if (car.getId() == 1){
+                    spiderStep.start();
+                }else{
+                    steveStep.start();
+                }
                 car.setX(x);
                 car.setY(y);
                 render();
                 setDeathScreenVisible();
                 setButtonsInvisible();
+                animationView.setVisibility(View.INVISIBLE);
                 tvScoreNumber.setText(""+car.getMovements());
                 tvScoreNumber2.setText(""+car.getMovements());
                 ivHearts.setImageResource(heartsId[0]);
                 break;
             case '3':
+                if(car.getId() == 1) {
+                    MediaPlayer music = MediaPlayer.create(MainActivity.this, R.raw.say2);
+                    music.start();
+                }else{
+                    MediaPlayer music = MediaPlayer.create(MainActivity.this, R.raw.hit2);
+                    music.start();
+                }
                 car.setX(x);
                 car.setY(y);
                 car.setMovements(car.getMovements()+1);
@@ -357,6 +405,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 if (car.getLife() <= 0) {
                     setDeathScreenVisible();
                     setButtonsInvisible();
+                    animationView.setVisibility(View.INVISIBLE);
                     tvScoreNumber.setText(""+car.getMovements());
                     tvScoreNumber2.setText(""+car.getMovements());
                     ivHearts.setImageResource(heartsId[0]);
@@ -369,30 +418,40 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 render();
                 setWinScreenVisible();
                 setButtonsInvisible();
+                imageView2.setVisibility(View.VISIBLE);
+                animationView.setVisibility(View.VISIBLE);
                 break;
         }
         if (database != null){
             actualizeFirebase(car);
-            if (car.getX() == car2.getX() && car.getY() == car.getY()) {
+            if (car.getX() == car2.getX() && car.getY() == car2.getY()) {
                 setButtonsInvisible();
+                imageView2.setVisibility(View.VISIBLE);
                 if(car.getId() == 1){
                     setWinScreenVisible();
-                    btRespawn.setVisibility(View.INVISIBLE);
                 }else{
                     setDeathScreenVisible();
-                    btRespawn.setVisibility(View.INVISIBLE);
+                    ivHearts.setImageResource(heartsId[0]);
+                    animationView.setVisibility(View.INVISIBLE);
                 }
             }
         }
     }
 
     private void setWinScreenVisible() {
+        ivHearts.setVisibility(View.INVISIBLE);
+        deathScreen.setBackground(getDrawable(R.drawable.greenscreen));
+        deathScreen.bringToFront();
+        LottieAnimationView lav = findViewById(R.id.animationView);
+        lav.playAnimation();
         clDeathScreen.setVisibility(View.VISIBLE);
         clDeathScreen.bringToFront();
         TextView tv = findViewById(R.id.textView);
         tv.setText("You won!");
         tv = findViewById(R.id.textView3);
         tv.setText("You won!");
+        MediaPlayer music = MediaPlayer.create(MainActivity.this, R.raw.winsound);
+        music.start();
     }
 
     //IN CASE OF DEATH EXECUTE NEXT TWO FUNCTIONS
@@ -407,6 +466,13 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         deathScreen.bringToFront();
         clDeathScreen.setVisibility(View.VISIBLE);
         clDeathScreen.bringToFront();
+        if (car.getId() == 1){
+            MediaPlayer music = MediaPlayer.create(MainActivity.this, R.raw.death);
+            music.start();
+        }else{
+            MediaPlayer music = MediaPlayer.create(MainActivity.this, R.raw.classic_hurt);
+            music.start();
+        }
     }
 
 
